@@ -1,0 +1,133 @@
+import os
+import math
+
+import FreeCAD as App
+import Part
+import Mesh
+
+
+# CampTapLab USB pump tripod adapter V3 macro.
+#
+# Purpose:
+# - Start from Tyler V2 imported STEP body.
+# - Preserve Tyler's bottom geometry.
+# - Add a CAD sleeve so the upper pump-fit OD becomes 57.15 mm / 2 1/4 inch.
+# - Extend the four outside pillars only through the sloped shoulder gap.
+# - Boolean-fuse all added shapes into one solid.
+# - Export STEP and STL.
+#
+# Before running:
+# 1. Open FreeCAD.
+# 2. Import Tyler's "Tripod Adapter V2.step".
+# 3. Make sure the imported body is visible and centered.
+# 4. Run this macro.
+
+
+OUT_DIR = "/Users/I818292/Documents/Funs/USBWaterPumpTripodAdapter/Tyler v2"
+OUT_STEP = os.path.join(OUT_DIR, "Tripod Adapter V3 57.15mm Shoulder Pillars.step")
+OUT_STL = os.path.join(OUT_DIR, "Tripod Adapter V3 57.15mm Shoulder Pillars.stl")
+
+# Measured from Tyler V2 STL.
+CURRENT_TOP_OD = 56.0
+TARGET_TOP_OD = 57.15
+TOP_Z0 = 30.0
+TOP_Z1 = 46.4
+
+# Existing lower pillar footprint measured from Tyler V2 STL.
+# The lower pillars end around z=24 mm. The shoulder/top cylinder starts around z=30 mm.
+PILLAR_INNER_R = 26.25
+PILLAR_OUTER_R = 29.65
+PILLAR_HALF_WIDTH = 4.82
+PILLAR_Z0 = 23.95
+PILLAR_Z1 = 30.0
+
+# The center hole through the upper plug should stay open for the hose.
+# Use a conservative cutter radius matching the older OpenSCAD design.
+HOSE_CLEARANCE_D = 42.0
+
+
+def get_doc():
+    doc = App.ActiveDocument
+    if doc is None:
+        raise RuntimeError("No active FreeCAD document. Import the STEP first, then run this macro.")
+    return doc
+
+
+def find_main_shape(doc):
+    candidates = []
+    for obj in doc.Objects:
+        shape = getattr(obj, "Shape", None)
+        if shape is None:
+            continue
+        try:
+            if shape.Volume > 1000:
+                candidates.append((shape.Volume, obj))
+        except Exception:
+            pass
+    if not candidates:
+        raise RuntimeError("Could not find an imported solid body. Import Tyler STEP first.")
+    candidates.sort(reverse=True, key=lambda item: item[0])
+    return candidates[0][1]
+
+
+def make_top_sleeve():
+    outer = Part.makeCylinder(TARGET_TOP_OD / 2.0, TOP_Z1 - TOP_Z0, App.Vector(0, 0, TOP_Z0))
+    inner = Part.makeCylinder(CURRENT_TOP_OD / 2.0 - 0.02, TOP_Z1 - TOP_Z0 + 0.4, App.Vector(0, 0, TOP_Z0 - 0.2))
+    hose = Part.makeCylinder(HOSE_CLEARANCE_D / 2.0, TOP_Z1 - TOP_Z0 + 0.8, App.Vector(0, 0, TOP_Z0 - 0.4))
+    return outer.cut(inner).cut(hose)
+
+
+def pillar_box(angle_deg):
+    dr = PILLAR_OUTER_R - PILLAR_INNER_R
+    width = PILLAR_HALF_WIDTH * 2.0
+    height = PILLAR_Z1 - PILLAR_Z0
+
+    # Start with the pillar at angle 0: radial depth along +X, tangential width
+    # along Y, centered around Y=0. Then rotate the whole solid around Z.
+    box = Part.makeBox(
+        dr,
+        width,
+        height,
+        App.Vector(PILLAR_INNER_R, -PILLAR_HALF_WIDTH, PILLAR_Z0),
+    )
+    box.rotate(App.Vector(0, 0, 0), App.Vector(0, 0, 1), angle_deg)
+    return box
+
+
+def main():
+    doc = get_doc()
+    main_obj = find_main_shape(doc)
+    base_shape = main_obj.Shape
+
+    sleeve = make_top_sleeve()
+    additions = sleeve
+    for angle in [0, 90, 180, 270]:
+        additions = additions.fuse(pillar_box(angle))
+
+    fused = base_shape.fuse(additions)
+    try:
+        fused = fused.removeSplitter()
+    except Exception:
+        pass
+
+    result = doc.addObject("Part::Feature", "Tripod_Adapter_V3_57_15mm_Shoulder_Pillars")
+    result.Shape = fused
+    doc.recompute()
+
+    # Hide original imported body to reduce confusion.
+    try:
+        main_obj.ViewObject.Visibility = False
+    except Exception:
+        pass
+
+    os.makedirs(OUT_DIR, exist_ok=True)
+    Part.export([result], OUT_STEP)
+    Mesh.export([result], OUT_STL)
+
+    print("Exported:")
+    print(OUT_STEP)
+    print(OUT_STL)
+    print("Done. Check the result visually before printing.")
+
+
+main()
