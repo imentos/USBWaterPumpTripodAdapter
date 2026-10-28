@@ -18,6 +18,13 @@ thread. V7 remains unchanged.
 The Tripod Base retains Tyler's exact modeled direct-print 1/4-20 thread on its
 underside. No metal threaded insert is required.
 
+The Screw-Down Base is a 90 mm x 14 mm low-profile permanent wood-mount option.
+Four 4.6 mm clearance holes on a 72 mm bolt circle have 9.2 mm countersinks for
+common #8 flat-head wood screws. The screws pass freely through the printed
+base and bite into the wood below. A typical starting size is #8 x 1 inch, but
+the installer must select a length suitable for the wood thickness and load.
+Mounting screws are not included.
+
 ## Print the fit coupons first
 
 Print `v8_thread_fit_male.stl` and `v8_thread_fit_female.stl` before printing the
@@ -39,8 +46,9 @@ the coupons pass.
 - Adapter: print upside down, with the wide pump-opening rim on the bed and the
   male thread pointing upward. A brim is recommended. This avoids printing the
   wide adapter shoulder in mid-air.
-- Tripod, Weighted, and Magnetic bases: print in their normal upright position,
-  flat bottom on the bed and the female socket opening upward.
+- Tripod, Weighted, Magnetic, and Screw-Down bases: print in their normal
+  upright position, flat bottom on the bed and the female socket opening
+  upward.
 - Support: off for the universal thread and its receiver. The 45-degree thread
   flanks are self-supporting in these orientations.
 
@@ -54,4 +62,4 @@ after trimming the intentional shoulder contact.
 - 42.0 mm straight inner bore.
 - Four 29 x 23 mm hose windows.
 - O-ring groove 0.40 mm deep, centered 0.2 inch below the top.
-- Weighted, Tripod, and Magnetic base families.
+- Weighted, Tripod, Magnetic, and Screw-Down base families.

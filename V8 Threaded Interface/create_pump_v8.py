@@ -53,6 +53,15 @@ FEMALE_CREST_W = 1.2
 RECEIVER_OD = 58.0
 RECEIVER_HEIGHT = 10.0
 
+# Low-profile wood screw-down base. Four countersunk clearance holes accept
+# common #8 flat-head wood screws while remaining outside the threaded receiver.
+SCREW_DOWN_BASE_D = 90.0
+SCREW_DOWN_BASE_H = 14.0
+SCREW_DOWN_HOLE_BCD = 72.0
+SCREW_DOWN_THROUGH_D = 4.6
+SCREW_DOWN_HEAD_D = 9.2
+SCREW_DOWN_COUNTERSINK_DEPTH = 2.6
+
 
 def cyl(diameter, height, z=0.0):
     return cq.Workplane("XY").workplane(offset=z).circle(diameter / 2.0).extrude(height)
@@ -224,6 +233,33 @@ def make_magnetic_base():
     return body.clean()
 
 
+def make_screw_down_base():
+    """Make a wood-mount base with four flush #8 wood-screw holes."""
+    body = cyl(SCREW_DOWN_BASE_D, SCREW_DOWN_BASE_H).edges().fillet(3.0)
+    body = add_receiver(body, SCREW_DOWN_BASE_H)
+
+    hole_radius = SCREW_DOWN_HOLE_BCD / 2.0
+    countersink_z = SCREW_DOWN_BASE_H - SCREW_DOWN_COUNTERSINK_DEPTH
+    for angle in (45, 135, 225, 315):
+        x = hole_radius * math.cos(math.radians(angle))
+        y = hole_radius * math.sin(math.radians(angle))
+        through_hole = (
+            cq.Workplane("XY", origin=(x, y, -0.1))
+            .circle(SCREW_DOWN_THROUGH_D / 2.0)
+            .extrude(SCREW_DOWN_BASE_H + 0.2)
+        )
+        countersink = (
+            cq.Workplane("XY", origin=(x, y, countersink_z))
+            .circle(SCREW_DOWN_THROUGH_D / 2.0)
+            .workplane(offset=SCREW_DOWN_COUNTERSINK_DEPTH + 0.1)
+            .circle(SCREW_DOWN_HEAD_D / 2.0)
+            .loft(combine=True)
+        )
+        body = body.cut(through_hole).cut(countersink)
+
+    return body.clean()
+
+
 def make_female_fit_coupon():
     return add_receiver(cyl(60.0, 10.0), 10.0)
 
@@ -253,6 +289,7 @@ def main():
         "v8_weighted_base_body": make_weighted_base_body(),
         "v8_weighted_base_cover": make_weighted_base_cover(),
         "v8_magnetic_base": make_magnetic_base(),
+        "v8_screw_down_base": make_screw_down_base(),
         "v8_thread_fit_male": make_male_fit_coupon(),
         "v8_thread_fit_female": make_female_fit_coupon(),
     }
