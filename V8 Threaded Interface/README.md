@@ -25,6 +25,11 @@ base and bite into the wood below. A typical starting size is #8 x 1 inch, but
 the installer must select a length suitable for the wood thickness and load.
 Mounting screws are not included.
 
+The optimized Magnetic Base is 84 mm diameter x 18.5 mm high and retains all
+six bottom-entry pockets for 20 x 5 mm magnets. Its solid CAD volume is 76.55
+cm3, 39% less than the original 90 x 24 mm version, while preserving 2.9 mm of
+material between the magnet pockets and female threaded socket.
+
 ## Print the fit coupons first
 
 Print `v8_thread_fit_male.stl` and `v8_thread_fit_female.stl` before printing the

@@ -53,6 +53,15 @@ FEMALE_CREST_W = 1.2
 RECEIVER_OD = 58.0
 RECEIVER_HEIGHT = 10.0
 
+# Compact six-magnet base. The 18.5 mm height leaves 2.9 mm of solid material
+# between the 5.3 mm-deep magnet pockets and the bottom of the female thread.
+MAGNETIC_BASE_D = 84.0
+MAGNETIC_BASE_H = 18.5
+MAGNETIC_BASE_EDGE_R = 1.5
+MAGNET_POCKET_CENTER_R = 27.0
+MAGNET_POCKET_D = 20.4
+MAGNET_POCKET_DEPTH = 5.3
+
 # Low-profile wood screw-down base. Four countersunk clearance holes accept
 # common #8 flat-head wood screws while remaining outside the threaded receiver.
 SCREW_DOWN_BASE_D = 90.0
@@ -222,13 +231,15 @@ def make_weighted_base_cover():
 
 
 def make_magnetic_base():
-    body = cyl(90.0, 24.0).edges().fillet(3.0)
-    body = add_receiver(body, 24.0)
+    body = cyl(MAGNETIC_BASE_D, MAGNETIC_BASE_H).edges().fillet(MAGNETIC_BASE_EDGE_R)
+    body = add_receiver(body, MAGNETIC_BASE_H)
     for angle in range(0, 360, 60):
-        x = 27.0 * math.cos(math.radians(angle))
-        y = 27.0 * math.sin(math.radians(angle))
+        x = MAGNET_POCKET_CENTER_R * math.cos(math.radians(angle))
+        y = MAGNET_POCKET_CENTER_R * math.sin(math.radians(angle))
         body = body.cut(
-            cq.Workplane("XY", origin=(x, y, -0.1)).circle(10.2).extrude(5.3)
+            cq.Workplane("XY", origin=(x, y, -0.1))
+            .circle(MAGNET_POCKET_D / 2.0)
+            .extrude(MAGNET_POCKET_DEPTH)
         )
     return body.clean()
 
